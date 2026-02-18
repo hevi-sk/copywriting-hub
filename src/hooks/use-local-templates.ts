@@ -24,15 +24,16 @@ function loadFromStorage(key: string, defaults: StoredTemplate[]): StoredTemplat
 }
 
 export function useLocalTemplates(storageKey: string, defaults: StoredTemplate[]) {
-  const [items, setItems] = useState<StoredTemplate[]>(defaults);
+  const [items, setItems] = useState<StoredTemplate[]>(() =>
+    loadFromStorage(storageKey, defaults)
+  );
 
   useEffect(() => {
     setItems(loadFromStorage(storageKey, defaults));
-  }, [storageKey]);
+  }, [storageKey, defaults]);
 
-  const persist = useCallback(
+  const writeStorage = useCallback(
     (next: StoredTemplate[]) => {
-      setItems(next);
       localStorage.setItem(storageKey, JSON.stringify(next));
     },
     [storageKey]
@@ -41,24 +42,36 @@ export function useLocalTemplates(storageKey: string, defaults: StoredTemplate[]
   const add = useCallback(
     (template: Omit<StoredTemplate, 'id'>) => {
       const newItem = { ...template, id: crypto.randomUUID() };
-      persist([...items, newItem]);
+      setItems((prev) => {
+        const next = [...prev, newItem];
+        writeStorage(next);
+        return next;
+      });
       return newItem;
     },
-    [items, persist]
+    [writeStorage]
   );
 
   const update = useCallback(
     (id: string, updates: Partial<Omit<StoredTemplate, 'id'>>) => {
-      persist(items.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+      setItems((prev) => {
+        const next = prev.map((t) => (t.id === id ? { ...t, ...updates } : t));
+        writeStorage(next);
+        return next;
+      });
     },
-    [items, persist]
+    [writeStorage]
   );
 
   const remove = useCallback(
     (id: string) => {
-      persist(items.filter((t) => t.id !== id));
+      setItems((prev) => {
+        const next = prev.filter((t) => t.id !== id);
+        writeStorage(next);
+        return next;
+      });
     },
-    [items, persist]
+    [writeStorage]
   );
 
   return { items, add, update, remove };
