@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx next build)",
+      "Bash(npm run dev:*)",
+      "Bash(lsof:*)",
+      "Bash(npx next build:*)",
+      "Bash(xargs kill:*)",
+      "Bash(npx next dev:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(sort:*)",
+      "Bash(ls:*)",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(node -e:*)",
+      "Bash(git -C /Users/tomassitarik/Downloads/copywriting-hub rev-parse --git-dir)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
