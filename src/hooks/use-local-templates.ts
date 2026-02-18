@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export interface StoredTemplate {
   id: string;
@@ -8,71 +8,48 @@ export interface StoredTemplate {
   prompt: string;
 }
 
-function loadFromStorage(key: string, defaults: StoredTemplate[]): StoredTemplate[] {
-  if (typeof window === 'undefined') return defaults;
-  const stored = localStorage.getItem(key);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return defaults;
-    }
-  }
-  // Seed with defaults on first load
-  localStorage.setItem(key, JSON.stringify(defaults));
-  return defaults;
-}
-
 export function useLocalTemplates(storageKey: string, defaults: StoredTemplate[]) {
-  const [items, setItems] = useState<StoredTemplate[]>(() =>
-    loadFromStorage(storageKey, defaults)
-  );
+  const [items, setItems] = useState<StoredTemplate[]>(defaults);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
 
+  // Load from localStorage on mount (client-side only)
   useEffect(() => {
-    setItems(loadFromStorage(storageKey, defaults));
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setItems(parsed);
+      } catch {
+        // keep defaults
+      }
+    } else {
+      localStorage.setItem(storageKey, JSON.stringify(defaults));
+    }
   }, [storageKey, defaults]);
 
-  const writeStorage = useCallback(
-    (next: StoredTemplate[]) => {
-      localStorage.setItem(storageKey, JSON.stringify(next));
-    },
-    [storageKey]
-  );
+  function save(next: StoredTemplate[]) {
+    setItems(next);
+    localStorage.setItem(storageKey, JSON.stringify(next));
+  }
 
-  const add = useCallback(
-    (template: Omit<StoredTemplate, 'id'>) => {
-      const newItem = { ...template, id: crypto.randomUUID() };
-      setItems((prev) => {
-        const next = [...prev, newItem];
-        writeStorage(next);
-        return next;
-      });
-      return newItem;
-    },
-    [writeStorage]
-  );
+  function add(template: Omit<StoredTemplate, 'id'>) {
+    const newItem: StoredTemplate = { ...template, id: crypto.randomUUID() };
+    const next = [...itemsRef.current, newItem];
+    save(next);
+    return newItem;
+  }
 
-  const update = useCallback(
-    (id: string, updates: Partial<Omit<StoredTemplate, 'id'>>) => {
-      setItems((prev) => {
-        const next = prev.map((t) => (t.id === id ? { ...t, ...updates } : t));
-        writeStorage(next);
-        return next;
-      });
-    },
-    [writeStorage]
-  );
+  function update(id: string, updates: Partial<Omit<StoredTemplate, 'id'>>) {
+    const next = itemsRef.current.map((t) => (t.id === id ? { ...t, ...updates } : t));
+    save(next);
+  }
 
-  const remove = useCallback(
-    (id: string) => {
-      setItems((prev) => {
-        const next = prev.filter((t) => t.id !== id);
-        writeStorage(next);
-        return next;
-      });
-    },
-    [writeStorage]
-  );
+  function remove(id: string) {
+    const next = itemsRef.current.filter((t) => t.id !== id);
+    save(next);
+  }
 
   return { items, add, update, remove };
 }
