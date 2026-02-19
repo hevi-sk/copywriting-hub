@@ -1,6 +1,7 @@
 import { LanguageCode, LANGUAGE_NAMES } from '@/types';
 
 export function getBlogGenerationPrompt(params: {
+  title?: string;
   brandName: string;
   brandContext: string;
   templateHtml: string;
@@ -30,6 +31,7 @@ Rules:
 ${params.templateHtml}
 </template>
 
+${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
 Topic: ${params.topic}
 Target keywords (use naturally throughout): ${params.keywords.join(', ')}
 ${params.customPrompt ? `\nAdditional instructions: ${params.customPrompt}` : ''}
@@ -39,6 +41,7 @@ Write the complete blog post now as clean HTML.`
 }
 
 export function getPresellGenerationPrompt(params: {
+  title?: string;
   brandName: string;
   brandContext: string;
   templateHtml: string;
@@ -70,6 +73,7 @@ Rules:
 ${params.templateHtml}
 </template>
 
+${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
 Topic: ${params.topic}
 Target keywords: ${params.keywords.join(', ')}
 ${params.customPrompt ? `\nAdditional instructions: ${params.customPrompt}` : ''}

@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const promptParams = {
+      title: body.title,
       brandName: body.brand_name || 'the brand',
       brandContext,
       templateHtml: body.template_html || '<article><h1>Title</h1><p>Content here</p></article>',
