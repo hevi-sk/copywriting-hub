@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface PresetTemplate {
@@ -15,7 +15,7 @@ export function usePresetTemplates(presetType: PresetType, defaults: PresetTempl
   const supabase = createClient();
   const [items, setItems] = useState<PresetTemplate[]>(defaults);
   const [loading, setLoading] = useState(true);
-  const seededRef = useRef(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     loadPresets();
@@ -25,34 +25,48 @@ export function usePresetTemplates(presetType: PresetType, defaults: PresetTempl
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
+      setInitialized(true);
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_presets')
       .select('*')
       .eq('type', presetType)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: true });
 
+    if (error) {
+      console.error('Failed to load presets:', error);
+      setLoading(false);
+      setInitialized(true);
+      return;
+    }
+
     if (data && data.length > 0) {
+      // User has presets in DB — use them
       setItems(data.map((row) => ({ id: row.id, name: row.name, prompt: row.prompt })));
-    } else if (!seededRef.current) {
-      // Seed defaults for this user on first use
-      seededRef.current = true;
+      setInitialized(true);
+    } else if (!initialized) {
+      // First load ever — seed defaults into Supabase
       const rows = defaults.map((d) => ({
         user_id: user.id,
         type: presetType,
         name: d.name,
         prompt: d.prompt,
       }));
-      const { data: inserted } = await supabase
+
+      const { data: inserted, error: insertError } = await supabase
         .from('user_presets')
         .insert(rows)
         .select();
 
-      if (inserted) {
+      if (insertError) {
+        console.error('Failed to seed defaults:', insertError);
+      } else if (inserted) {
         setItems(inserted.map((row) => ({ id: row.id, name: row.name, prompt: row.prompt })));
       }
+      setInitialized(true);
     }
 
     setLoading(false);
@@ -73,7 +87,10 @@ export function usePresetTemplates(presetType: PresetType, defaults: PresetTempl
       .select()
       .single();
 
-    if (error || !data) return null;
+    if (error) {
+      console.error('Failed to add preset:', error);
+      return null;
+    }
 
     const newItem: PresetTemplate = { id: data.id, name: data.name, prompt: data.prompt };
     setItems((prev) => [...prev, newItem]);
@@ -86,9 +103,12 @@ export function usePresetTemplates(presetType: PresetType, defaults: PresetTempl
       .update(updates)
       .eq('id', id);
 
-    if (!error) {
-      setItems((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+    if (error) {
+      console.error('Failed to update preset:', error);
+      return;
     }
+
+    setItems((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
   }
 
   async function remove(id: string) {
@@ -97,9 +117,12 @@ export function usePresetTemplates(presetType: PresetType, defaults: PresetTempl
       .delete()
       .eq('id', id);
 
-    if (!error) {
-      setItems((prev) => prev.filter((t) => t.id !== id));
+    if (error) {
+      console.error('Failed to delete preset:', error);
+      return;
     }
+
+    setItems((prev) => prev.filter((t) => t.id !== id));
   }
 
   return { items, loading, add, update, remove };

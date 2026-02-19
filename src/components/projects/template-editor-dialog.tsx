@@ -12,8 +12,8 @@ import {
 interface TemplateEditorDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; prompt: string }) => void;
-  onDelete?: () => void;
+  onSave: (data: { name: string; prompt: string }) => void | Promise<void>;
+  onDelete?: () => void | Promise<void>;
   initial?: { name: string; prompt: string } | null;
   title: string;
   promptLabel?: string;
@@ -32,15 +32,32 @@ export function TemplateEditorDialog({
 }: TemplateEditorDialogProps) {
   const [name, setName] = useState(initial?.name || '');
   const [prompt, setPrompt] = useState(initial?.prompt || '');
+  const [saving, setSaving] = useState(false);
 
-  function handleSave() {
-    if (!name.trim() || !prompt.trim()) return;
-    onSave({ name: name.trim(), prompt: prompt.trim() });
-    onClose();
+  async function handleSave() {
+    if (!name.trim() || !prompt.trim() || saving) return;
+    setSaving(true);
+    try {
+      await onSave({ name: name.trim(), prompt: prompt.trim() });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!onDelete || saving) return;
+    setSaving(true);
+    try {
+      await onDelete();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !saving && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -55,6 +72,7 @@ export function TemplateEditorDialog({
               placeholder="e.g. SEO Blog Post"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               autoFocus
+              disabled={saving}
             />
           </div>
 
@@ -66,6 +84,7 @@ export function TemplateEditorDialog({
               placeholder={promptPlaceholder}
               rows={5}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+              disabled={saving}
             />
           </div>
         </div>
@@ -76,11 +95,9 @@ export function TemplateEditorDialog({
               {onDelete && (
                 <button
                   type="button"
-                  onClick={() => {
-                    onDelete();
-                    onClose();
-                  }}
-                  className="px-3 py-2 text-xs text-destructive hover:text-destructive/80"
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="px-3 py-2 text-xs text-destructive hover:text-destructive/80 disabled:opacity-50"
                 >
                   Delete
                 </button>
@@ -90,17 +107,18 @@ export function TemplateEditorDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm rounded-md border border-input hover:bg-muted"
+                disabled={saving}
+                className="px-4 py-2 text-sm rounded-md border border-input hover:bg-muted disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={!name.trim() || !prompt.trim()}
+                disabled={!name.trim() || !prompt.trim() || saving}
                 className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
               >
-                Save
+                {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>
