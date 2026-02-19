@@ -24,6 +24,7 @@ export default function NewPresellPage() {
   const [project, setProject] = useState<Partial<Project>>({});
   const [showExport, setShowExport] = useState(false);
   const [brandName, setBrandName] = useState('');
+  const [imageStyle, setImageStyle] = useState('');
 
   async function handleGenerate(data: {
     title: string;
@@ -77,6 +78,7 @@ export default function NewPresellPage() {
     setProjectId(newProject.id);
     setProject(newProject);
     setBrandName(data.brand_name);
+    setImageStyle(data.image_style);
 
     try {
       const res = await fetch('/api/ai/generate-content', {
@@ -313,6 +315,7 @@ export default function NewPresellPage() {
             onSave={handleSave}
             projectType="presell"
             brandName={brandName}
+            imageStyle={imageStyle}
           />
         </div>
       )}

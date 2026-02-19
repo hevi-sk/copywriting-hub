@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const results = await Promise.allSettled(
       placeholders.map(async (placeholder) => {
         const brandDesc = brand_context ? brand_context.slice(0, 200) : '';
-        const prompt = `Image for ${brand_name || 'the brand'}${brandDesc ? `. ${brandDesc}` : ''}. Scene: ${placeholder.section}. Description: ${placeholder.alt}. Style: ${stylePrompt}. High quality, photorealistic. No text or watermarks.`;
+        const prompt = `Image for ${brand_name || 'the brand'}${brandDesc ? `. ${brandDesc}` : ''}. Scene: ${placeholder.section}. Description: ${placeholder.alt}. Style: ${stylePrompt}. High quality, photorealistic. CRITICAL: The image must contain absolutely NO text, NO words, NO letters, NO numbers, NO logos, and NO watermarks of any kind.`;
 
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash-image',

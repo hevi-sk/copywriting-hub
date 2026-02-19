@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { prompt, original_alt } = await request.json();
+    const { prompt, original_alt, image_style } = await request.json();
 
     const apiKey = process.env.GOOGLE_API_KEY;
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    const fullPrompt = `${prompt}. ${original_alt ? `Context: ${original_alt}.` : ''} High quality, photorealistic. No text or watermarks.`;
+    const fullPrompt = `${prompt}. ${original_alt ? `Context: ${original_alt}.` : ''} Style: ${image_style || 'Warm lifestyle photography. Natural setting, soft lighting, cozy atmosphere.'}. High quality, photorealistic. CRITICAL: The image must contain absolutely NO text, NO words, NO letters, NO numbers, NO logos, and NO watermarks of any kind.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',

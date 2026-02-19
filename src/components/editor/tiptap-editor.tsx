@@ -20,6 +20,7 @@ interface TiptapEditorProps {
   onSave?: (html: string) => void;
   projectType?: 'blog' | 'presell';
   brandName?: string;
+  imageStyle?: string;
   editable?: boolean;
 }
 
@@ -29,6 +30,7 @@ export function TiptapEditor({
   onSave,
   projectType = 'blog',
   brandName,
+  imageStyle,
   editable = true,
 }: TiptapEditorProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('visual');
@@ -208,7 +210,7 @@ export function TiptapEditor({
         {/* Visual Editor */}
         {(viewMode === 'visual' || viewMode === 'split') && (
           <div className="tiptap-editor">
-            {editor && <AIBubbleMenu editor={editor} brandName={brandName} />}
+            {editor && <AIBubbleMenu editor={editor} brandName={brandName} imageStyle={imageStyle} />}
             <EditorContent editor={editor} />
           </div>
         )}

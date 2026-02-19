@@ -9,6 +9,7 @@ import { DOMSerializer } from '@tiptap/pm/model';
 interface AIBubbleMenuProps {
   editor: Editor;
   brandName?: string;
+  imageStyle?: string;
 }
 
 interface SavedSelection {
@@ -22,7 +23,7 @@ interface SavedSelection {
   contextAfter: string;
 }
 
-export function AIBubbleMenu({ editor, brandName }: AIBubbleMenuProps) {
+export function AIBubbleMenu({ editor, brandName, imageStyle }: AIBubbleMenuProps) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -231,6 +232,7 @@ export function AIBubbleMenu({ editor, brandName }: AIBubbleMenuProps) {
           body: JSON.stringify({
             prompt: prompt,
             original_alt: sel.imageAttrs?.alt || '',
+            image_style: imageStyle || '',
           }),
         });
 

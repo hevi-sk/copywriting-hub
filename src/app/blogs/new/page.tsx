@@ -26,6 +26,7 @@ export default function NewBlogPage() {
   const [showExport, setShowExport] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [brandName, setBrandName] = useState('');
+  const [imageStyle, setImageStyle] = useState('');
 
   async function handleGenerate(data: {
     title: string;
@@ -80,6 +81,7 @@ export default function NewBlogPage() {
     setProjectId(newProject.id);
     setProject(newProject);
     setBrandName(data.brand_name);
+    setImageStyle(data.image_style);
 
     // Stream content generation
     try {
@@ -329,6 +331,7 @@ export default function NewBlogPage() {
             onSave={handleSave}
             projectType="blog"
             brandName={brandName}
+            imageStyle={imageStyle}
           />
         </div>
       )}

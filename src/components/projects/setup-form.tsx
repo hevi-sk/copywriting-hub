@@ -46,11 +46,18 @@ export function SetupForm({ type, onGenerate, loading }: SetupFormProps) {
   const [language, setLanguage] = useState<LanguageCode>('sk');
   const [customPrompt, setCustomPrompt] = useState('');
   const [promptTemplateId, setPromptTemplateId] = useState('');
-  const [imageStyleId, setImageStyleId] = useState('lifestyle');
+  const [imageStyleId, setImageStyleId] = useState('');
 
   // Supabase-backed template stores
   const promptTemplates = usePresetTemplates('prompt_template', PROMPT_TEMPLATES);
   const imageStyles = usePresetTemplates('image_style', IMAGE_STYLES);
+
+  // Auto-select first image style when current selection doesn't match any item
+  useEffect(() => {
+    if (imageStyles.items.length > 0 && !imageStyles.items.find((s) => s.id === imageStyleId)) {
+      setImageStyleId(imageStyles.items[0].id);
+    }
+  }, [imageStyles.items, imageStyleId]);
 
   // Dialog state
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
