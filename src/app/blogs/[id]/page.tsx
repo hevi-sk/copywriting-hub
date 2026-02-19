@@ -8,6 +8,7 @@ import { ExportDialog } from '@/components/projects/export-dialog';
 import { PreviewDialog } from '@/components/projects/preview-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import type { Project, LanguageCode } from '@/types';
+import { SeoFields } from '@/components/projects/seo-fields';
 import { CheckCircle, Download, ArrowLeft, Loader2, Eye } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,6 +22,9 @@ export default function BlogEditorPage() {
   const [showExport, setShowExport] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [brandName, setBrandName] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [generatingSeo, setGeneratingSeo] = useState(false);
 
   useEffect(() => {
     loadProject();
@@ -36,6 +40,8 @@ export default function BlogEditorPage() {
     if (data) {
       setProject(data as Project);
       setContent(data.content_html || '');
+      setSeoTitle(data.seo_title || '');
+      setSeoDescription(data.seo_description || '');
 
       if (data.brand_id) {
         const { data: brand } = await supabase
@@ -47,6 +53,39 @@ export default function BlogEditorPage() {
       }
     }
     setLoading(false);
+  }
+
+  async function generateSeo() {
+    if (!content || !project) return;
+    setGeneratingSeo(true);
+    try {
+      const res = await fetch('/api/ai/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content_html: content,
+          title: project.title || '',
+          keywords: project.keywords || [],
+          language: project.language || 'sk',
+          brand_name: brandName,
+        }),
+      });
+      const data = await res.json();
+      if (data.seo_title) setSeoTitle(data.seo_title);
+      if (data.seo_description) setSeoDescription(data.seo_description);
+
+      await supabase
+        .from('projects')
+        .update({
+          seo_title: data.seo_title || null,
+          seo_description: data.seo_description || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', params.id);
+    } catch (error) {
+      console.error('SEO generation failed:', error);
+    }
+    setGeneratingSeo(false);
   }
 
   async function handleSave(html: string) {
@@ -156,6 +195,27 @@ export default function BlogEditorPage() {
         onSave={handleSave}
         projectType="blog"
         brandName={brandName}
+      />
+
+      <SeoFields
+        seoTitle={seoTitle}
+        seoDescription={seoDescription}
+        onSeoTitleChange={(val) => {
+          setSeoTitle(val);
+          supabase
+            .from('projects')
+            .update({ seo_title: val, updated_at: new Date().toISOString() })
+            .eq('id', params.id);
+        }}
+        onSeoDescriptionChange={(val) => {
+          setSeoDescription(val);
+          supabase
+            .from('projects')
+            .update({ seo_description: val, updated_at: new Date().toISOString() })
+            .eq('id', params.id);
+        }}
+        onGenerate={generateSeo}
+        generating={generatingSeo}
       />
 
       {showExport && (

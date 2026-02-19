@@ -14,6 +14,18 @@ export interface BrandRecord {
   created_at: string;
   updated_at: string;
 }
+
+export interface BrandDocument {
+  id: string;
+  brand_id: string;
+  user_id: string;
+  file_name: string;
+  file_type: string;
+  content_text: string;
+  char_count: number;
+  created_at: string;
+}
+
 export type KeywordSource = 'gsc' | 'ahrefs_import' | 'ai_suggestion';
 export type TemplateSourceType = 'html' | 'url';
 export type LanguageCode = 'sk' | 'cs' | 'en' | 'da' | 'hu';
@@ -34,6 +46,8 @@ export interface Project {
   translated_versions: Record<LanguageCode, string>;
   brand_id: string | null;
   images: ProjectImage[];
+  seo_title: string | null;
+  seo_description: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +104,7 @@ export interface GenerateContentRequest {
   template_html: string;
   language: LanguageCode;
   custom_prompt?: string;
+  brand_id?: string;
   brand_name?: string;
   brand_context?: string;
   image_count?: number;

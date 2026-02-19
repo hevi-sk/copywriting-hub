@@ -188,6 +188,36 @@ Output ONLY the JSON array — no explanations or code fences.`
   };
 }
 
+export function getSeoMetadataPrompt(params: {
+  contentHtml: string;
+  title: string;
+  keywords: string[];
+  language: LanguageCode;
+  brandName?: string;
+}) {
+  return {
+    system: `You are an SEO specialist. Generate optimized SEO title and meta description for web content.
+
+Rules:
+- SEO Title: Max 60 characters. Include the primary keyword near the beginning. Make it compelling and click-worthy.
+- SEO Description: 140-155 characters. Summarize the content value proposition. Include 1-2 keywords naturally. End with a call-to-action or benefit.
+- Write in ${LANGUAGE_NAMES[params.language]}
+- Output ONLY valid JSON: {"seo_title": "...", "seo_description": "..."}
+- No markdown, no code fences, no explanations.`,
+
+    user: `Generate SEO title and meta description for this content:
+
+Title: ${params.title}
+Target keywords: ${params.keywords.join(', ')}
+${params.brandName ? `Brand: ${params.brandName}` : ''}
+
+Content (first 1500 chars):
+${params.contentHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 1500)}
+
+Output as JSON: {"seo_title": "...", "seo_description": "..."}`
+  };
+}
+
 export function getImagePrompt(params: {
   section: string;
   alt: string;
