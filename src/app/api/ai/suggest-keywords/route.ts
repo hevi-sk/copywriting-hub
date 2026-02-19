@@ -32,13 +32,32 @@ export async function POST(request: NextRequest) {
     if (brand) {
       const { data: brandRecord } = await supabase
         .from('brands')
-        .select('name, brand_context')
+        .select('id, name, brand_context')
         .eq('slug', brand)
         .eq('user_id', user.id)
         .single();
       if (brandRecord) {
         brandName = brandRecord.name;
         brandContext = brandRecord.brand_context || brandContext;
+
+        // Append brand document content
+        const { data: docs } = await supabase
+          .from('brand_documents')
+          .select('file_name, content_text')
+          .eq('brand_id', brandRecord.id)
+          .eq('user_id', user.id);
+
+        if (docs && docs.length > 0) {
+          const docTexts = docs
+            .map((d) => `--- ${d.file_name} ---\n${d.content_text}`)
+            .join('\n\n');
+          brandContext = `${brandContext}\n\nAdditional brand knowledge from documents:\n${docTexts}`;
+        }
+
+        // Cap brand context size
+        if (brandContext.length > 15000) {
+          brandContext = brandContext.slice(0, 15000) + '\n\n[Brand context truncated due to length]';
+        }
       }
     }
 

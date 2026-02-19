@@ -28,8 +28,30 @@ export async function POST(request: NextRequest) {
 
     const apiKey =
       settings?.openai_api_key || process.env.OPENAI_API_KEY;
-    const brandContext =
+    let brandContext =
       body.brand_context || settings?.brand_context || 'No brand context set';
+
+    // Append brand document content if a brand is selected
+    if (body.brand_id) {
+      const { data: docs } = await supabase
+        .from('brand_documents')
+        .select('file_name, content_text')
+        .eq('brand_id', body.brand_id)
+        .eq('user_id', user.id);
+
+      if (docs && docs.length > 0) {
+        const docTexts = docs
+          .map((d) => `--- ${d.file_name} ---\n${d.content_text}`)
+          .join('\n\n');
+        brandContext = `${brandContext}\n\nAdditional brand knowledge from documents:\n${docTexts}`;
+      }
+    }
+
+    // Cap brand context to avoid excessive prompt size
+    const MAX_BRAND_CONTEXT_CHARS = 15000;
+    if (brandContext.length > MAX_BRAND_CONTEXT_CHARS) {
+      brandContext = brandContext.slice(0, MAX_BRAND_CONTEXT_CHARS) + '\n\n[Brand context truncated due to length]';
+    }
 
     if (!apiKey) {
       return new Response(

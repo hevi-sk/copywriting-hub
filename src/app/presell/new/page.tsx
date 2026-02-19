@@ -97,6 +97,7 @@ export default function NewPresellPage() {
           language: data.language,
           custom_prompt: data.custom_prompt,
           image_count: 3,
+          brand_id: data.brand_id || undefined,
           brand_name: data.brand_name,
           brand_context: data.brand_context,
         }),

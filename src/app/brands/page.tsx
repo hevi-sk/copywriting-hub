@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { BrandRecord } from '@/types';
+import type { BrandRecord, BrandDocument } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { PlusCircle, Trash2, Pencil, X, Globe, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, X, Globe, Loader2, Upload, FileText } from 'lucide-react';
 
 export default function BrandsPage() {
   const supabase = createClient();
@@ -14,6 +14,8 @@ export default function BrandsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [scraping, setScraping] = useState(false);
+  const [documents, setDocuments] = useState<Record<string, BrandDocument[]>>({});
+  const [uploading, setUploading] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -23,6 +25,7 @@ export default function BrandsPage() {
 
   useEffect(() => {
     loadBrands();
+    loadDocuments();
   }, []);
 
   async function loadBrands() {
@@ -32,6 +35,52 @@ export default function BrandsPage() {
       .order('created_at', { ascending: false });
     setBrands(data || []);
     setLoading(false);
+  }
+
+  async function loadDocuments() {
+    const { data } = await supabase
+      .from('brand_documents')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    const grouped: Record<string, BrandDocument[]> = {};
+    (data || []).forEach((doc: BrandDocument) => {
+      if (!grouped[doc.brand_id]) grouped[doc.brand_id] = [];
+      grouped[doc.brand_id].push(doc);
+    });
+    setDocuments(grouped);
+  }
+
+  async function handleUploadDocument(brandId: string, file: File) {
+    setUploading(brandId);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('brand_id', brandId);
+
+    try {
+      const res = await fetch('/api/brands/upload-document', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast({ title: 'Upload failed', description: data.error, variant: 'destructive' });
+      } else {
+        toast({ title: 'Uploaded', description: `${file.name} processed successfully.` });
+        loadDocuments();
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Failed to upload document.', variant: 'destructive' });
+    }
+    setUploading(null);
+  }
+
+  async function handleDeleteDocument(docId: string) {
+    const { error } = await supabase.from('brand_documents').delete().eq('id', docId);
+    if (!error) {
+      loadDocuments();
+      toast({ title: 'Deleted', description: 'Document removed.' });
+    }
   }
 
   function resetForm() {
@@ -350,6 +399,51 @@ export default function BrandsPage() {
                   <Trash2 className="h-3 w-3" />
                   Delete
                 </button>
+              </div>
+
+              {/* Documents */}
+              <div className="border-t pt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Documents ({(documents[brand.id] || []).length})
+                  </span>
+                  <label className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-muted rounded-md hover:bg-muted/80 cursor-pointer">
+                    {uploading === brand.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Upload className="h-3 w-3" />
+                    )}
+                    {uploading === brand.id ? 'Uploading...' : 'Upload'}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.docx,.txt,.md"
+                      disabled={uploading === brand.id}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadDocument(brand.id, file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+                {(documents[brand.id] || []).map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between text-xs gap-2">
+                    <span className="flex items-center gap-1.5 truncate min-w-0">
+                      <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{doc.file_name}</span>
+                      <span className="text-muted-foreground shrink-0">
+                        ({Math.round(doc.char_count / 1000)}k chars)
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => handleDeleteDocument(doc.id)}
+                      className="text-destructive hover:text-destructive/80 shrink-0"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
