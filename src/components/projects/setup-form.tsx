@@ -10,7 +10,7 @@ import type {
   BrandRecord,
 } from '@/types';
 import { LANGUAGES, PROMPT_TEMPLATES, IMAGE_STYLES } from '@/types';
-import { useLocalTemplates } from '@/hooks/use-local-templates';
+import { usePresetTemplates } from '@/hooks/use-preset-templates';
 import { TemplateEditorDialog } from './template-editor-dialog';
 import { Pencil } from 'lucide-react';
 
@@ -48,9 +48,9 @@ export function SetupForm({ type, onGenerate, loading }: SetupFormProps) {
   const [promptTemplateId, setPromptTemplateId] = useState('');
   const [imageStyleId, setImageStyleId] = useState('lifestyle');
 
-  // Local template stores
-  const promptTemplates = useLocalTemplates('prompt-templates', PROMPT_TEMPLATES);
-  const imageStyles = useLocalTemplates('image-styles', IMAGE_STYLES);
+  // Supabase-backed template stores
+  const promptTemplates = usePresetTemplates('prompt_template', PROMPT_TEMPLATES);
+  const imageStyles = usePresetTemplates('image_style', IMAGE_STYLES);
 
   // Dialog state
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
@@ -429,18 +429,18 @@ export function SetupForm({ type, onGenerate, loading }: SetupFormProps) {
           setPromptDialogOpen(false);
           setPromptDialogEdit(null);
         }}
-        onSave={(data) => {
+        onSave={async (data) => {
           if (promptDialogEdit) {
-            promptTemplates.update(promptDialogEdit, data);
+            await promptTemplates.update(promptDialogEdit, data);
           } else {
-            const newTmpl = promptTemplates.add(data);
-            setPromptTemplateId(newTmpl.id);
+            const newTmpl = await promptTemplates.add(data);
+            if (newTmpl) setPromptTemplateId(newTmpl.id);
           }
         }}
         onDelete={
           promptDialogEdit
-            ? () => {
-                promptTemplates.remove(promptDialogEdit);
+            ? async () => {
+                await promptTemplates.remove(promptDialogEdit);
                 if (promptTemplateId === promptDialogEdit) {
                   setPromptTemplateId('');
                 }
@@ -461,18 +461,18 @@ export function SetupForm({ type, onGenerate, loading }: SetupFormProps) {
           setStyleDialogOpen(false);
           setStyleDialogEdit(null);
         }}
-        onSave={(data) => {
+        onSave={async (data) => {
           if (styleDialogEdit) {
-            imageStyles.update(styleDialogEdit, data);
+            await imageStyles.update(styleDialogEdit, data);
           } else {
-            const newStyle = imageStyles.add(data);
-            setImageStyleId(newStyle.id);
+            const newStyle = await imageStyles.add(data);
+            if (newStyle) setImageStyleId(newStyle.id);
           }
         }}
         onDelete={
           styleDialogEdit
-            ? () => {
-                imageStyles.remove(styleDialogEdit);
+            ? async () => {
+                await imageStyles.remove(styleDialogEdit);
                 if (imageStyleId === styleDialogEdit) {
                   setImageStyleId(imageStyles.items[0]?.id || '');
                 }
