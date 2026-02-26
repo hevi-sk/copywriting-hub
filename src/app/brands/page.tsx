@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { BrandRecord, BrandDocument } from '@/types';
+import type { BrandRecord } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { PlusCircle, Trash2, Pencil, X, Globe, Loader2, Upload, FileText } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, X, Globe, Loader2 } from 'lucide-react';
 
 export default function BrandsPage() {
   const supabase = createClient();
@@ -14,18 +14,19 @@ export default function BrandsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [scraping, setScraping] = useState(false);
-  const [documents, setDocuments] = useState<Record<string, BrandDocument[]>>({});
-  const [uploading, setUploading] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     slug: '',
     website_url: '',
     brand_context: '',
+    products: '',
+    vop: '',
+    tone_of_voice: '',
+    target_audience: '',
   });
 
   useEffect(() => {
     loadBrands();
-    loadDocuments();
   }, []);
 
   async function loadBrands() {
@@ -37,62 +38,8 @@ export default function BrandsPage() {
     setLoading(false);
   }
 
-  async function loadDocuments() {
-    const { data } = await supabase
-      .from('brand_documents')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    const grouped: Record<string, BrandDocument[]> = {};
-    (data || []).forEach((doc: BrandDocument) => {
-      if (!grouped[doc.brand_id]) grouped[doc.brand_id] = [];
-      grouped[doc.brand_id].push(doc);
-    });
-    setDocuments(grouped);
-  }
-
-  async function handleUploadDocument(brandId: string, file: File) {
-    setUploading(brandId);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('brand_id', brandId);
-
-    try {
-      const res = await fetch('/api/brands/upload-document', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        let errorMsg = `Server error (${res.status})`;
-        try { errorMsg = JSON.parse(text).error || errorMsg; } catch {}
-        toast({ title: 'Upload failed', description: errorMsg, variant: 'destructive' });
-        setUploading(null);
-        return;
-      }
-      const data = await res.json();
-      if (data.error) {
-        toast({ title: 'Upload failed', description: data.error, variant: 'destructive' });
-      } else {
-        toast({ title: 'Uploaded', description: `${file.name} processed successfully.` });
-        loadDocuments();
-      }
-    } catch (err) {
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to upload document.', variant: 'destructive' });
-    }
-    setUploading(null);
-  }
-
-  async function handleDeleteDocument(docId: string) {
-    const { error } = await supabase.from('brand_documents').delete().eq('id', docId);
-    if (!error) {
-      loadDocuments();
-      toast({ title: 'Deleted', description: 'Document removed.' });
-    }
-  }
-
   function resetForm() {
-    setForm({ name: '', slug: '', website_url: '', brand_context: '' });
+    setForm({ name: '', slug: '', website_url: '', brand_context: '', products: '', vop: '', tone_of_voice: '', target_audience: '' });
     setEditingId(null);
     setShowForm(false);
   }
@@ -103,6 +50,10 @@ export default function BrandsPage() {
       slug: brand.slug,
       website_url: brand.website_url || '',
       brand_context: brand.brand_context || '',
+      products: brand.products || '',
+      vop: brand.vop || '',
+      tone_of_voice: brand.tone_of_voice || '',
+      target_audience: brand.target_audience || '',
     });
     setEditingId(brand.id);
     setShowForm(true);
@@ -161,17 +112,21 @@ export default function BrandsPage() {
     if (!user) return;
 
     const slug = form.slug || generateSlug(form.name);
+    const brandData = {
+      name: form.name,
+      slug,
+      website_url: form.website_url || null,
+      brand_context: form.brand_context || null,
+      products: form.products || null,
+      vop: form.vop || null,
+      tone_of_voice: form.tone_of_voice || null,
+      target_audience: form.target_audience || null,
+    };
 
     if (editingId) {
       const { error } = await supabase
         .from('brands')
-        .update({
-          name: form.name,
-          slug,
-          website_url: form.website_url || null,
-          brand_context: form.brand_context || null,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ ...brandData, updated_at: new Date().toISOString() })
         .eq('id', editingId);
 
       if (error) {
@@ -188,10 +143,7 @@ export default function BrandsPage() {
     } else {
       const { error } = await supabase.from('brands').insert({
         user_id: user.id,
-        name: form.name,
-        slug,
-        website_url: form.website_url || null,
-        brand_context: form.brand_context || null,
+        ...brandData,
       });
 
       if (error) {
@@ -231,6 +183,13 @@ export default function BrandsPage() {
       </div>
     );
   }
+
+  const brandFields = [
+    { key: 'products' as const, label: 'Products / Services' },
+    { key: 'vop' as const, label: 'VOP (Conditions)' },
+    { key: 'tone_of_voice' as const, label: 'Tone of Voice' },
+    { key: 'target_audience' as const, label: 'Target Audience' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -333,13 +292,28 @@ export default function BrandsPage() {
                 onChange={(e) =>
                   setForm({ ...form, brand_context: e.target.value })
                 }
-                rows={8}
-                placeholder="Product info, brand description, key selling points... This context is passed to the AI when generating content for this brand."
+                rows={6}
+                placeholder="General brand description, key selling points... This context is passed to the AI when generating content."
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
               />
               <p className="text-xs text-muted-foreground">
                 This text is included in AI prompts. You can scrape from URL and then edit manually.
               </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {brandFields.map(({ key, label }) => (
+                <div key={key} className="space-y-2">
+                  <label className="text-sm font-medium">{label}</label>
+                  <textarea
+                    value={form[key]}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                    rows={3}
+                    placeholder={`Enter ${label.toLowerCase()}...`}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="flex gap-2">
@@ -392,6 +366,19 @@ export default function BrandsPage() {
                 </p>
               )}
 
+              {brandFields.some(({ key }) => brand[key]) && (
+                <div className="border-t pt-2 space-y-1">
+                  {brandFields.map(({ key, label }) =>
+                    brand[key] ? (
+                      <p key={key} className="text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">{label}:</span>{' '}
+                        <span className="line-clamp-1">{brand[key]}</span>
+                      </p>
+                    ) : null
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(brand)}
@@ -407,51 +394,6 @@ export default function BrandsPage() {
                   <Trash2 className="h-3 w-3" />
                   Delete
                 </button>
-              </div>
-
-              {/* Documents */}
-              <div className="border-t pt-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Documents ({(documents[brand.id] || []).length})
-                  </span>
-                  <label className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-muted rounded-md hover:bg-muted/80 cursor-pointer">
-                    {uploading === brand.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Upload className="h-3 w-3" />
-                    )}
-                    {uploading === brand.id ? 'Uploading...' : 'Upload'}
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.docx,.txt,.md"
-                      disabled={uploading === brand.id}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleUploadDocument(brand.id, file);
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                </div>
-                {(documents[brand.id] || []).map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between text-xs gap-2">
-                    <span className="flex items-center gap-1.5 truncate min-w-0">
-                      <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
-                      <span className="truncate">{doc.file_name}</span>
-                      <span className="text-muted-foreground shrink-0">
-                        ({Math.round(doc.char_count / 1000)}k chars)
-                      </span>
-                    </span>
-                    <button
-                      onClick={() => handleDeleteDocument(doc.id)}
-                      className="text-destructive hover:text-destructive/80 shrink-0"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
               </div>
             </div>
           ))}

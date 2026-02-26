@@ -31,19 +31,29 @@ export async function POST(request: NextRequest) {
     let brandContext =
       body.brand_context || settings?.brand_context || 'No brand context set';
 
-    // Append brand document content if a brand is selected
+    // Append structured brand fields if a brand is selected
     if (body.brand_id) {
-      const { data: docs } = await supabase
-        .from('brand_documents')
-        .select('file_name, content_text')
-        .eq('brand_id', body.brand_id)
-        .eq('user_id', user.id);
+      const { data: brandRecord } = await supabase
+        .from('brands')
+        .select('products, vop, tone_of_voice, target_audience')
+        .eq('id', body.brand_id)
+        .eq('user_id', user.id)
+        .single();
 
-      if (docs && docs.length > 0) {
-        const docTexts = docs
-          .map((d) => `--- ${d.file_name} ---\n${d.content_text}`)
+      if (brandRecord) {
+        const fields = [
+          { label: 'Products / Services', value: brandRecord.products },
+          { label: 'Tone of Voice', value: brandRecord.tone_of_voice },
+          { label: 'Target Audience', value: brandRecord.target_audience },
+          { label: 'VOP (Conditions)', value: brandRecord.vop },
+        ];
+        const extras = fields
+          .filter((f) => f.value)
+          .map((f) => `${f.label}: ${f.value}`)
           .join('\n\n');
-        brandContext = `${brandContext}\n\nAdditional brand knowledge from documents:\n${docTexts}`;
+        if (extras) {
+          brandContext = `${brandContext}\n\n${extras}`;
+        }
       }
     }
 

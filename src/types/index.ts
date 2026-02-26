@@ -11,19 +11,12 @@ export interface BrandRecord {
   slug: string;
   website_url: string | null;
   brand_context: string | null;
+  products: string | null;
+  vop: string | null;
+  tone_of_voice: string | null;
+  target_audience: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface BrandDocument {
-  id: string;
-  brand_id: string;
-  user_id: string;
-  file_name: string;
-  file_type: string;
-  content_text: string;
-  char_count: number;
-  created_at: string;
 }
 
 export type KeywordSource = 'gsc' | 'ahrefs_import' | 'ai_suggestion';
