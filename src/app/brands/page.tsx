@@ -62,6 +62,14 @@ export default function BrandsPage() {
         method: 'POST',
         body: formData,
       });
+      if (!res.ok) {
+        const text = await res.text();
+        let errorMsg = `Server error (${res.status})`;
+        try { errorMsg = JSON.parse(text).error || errorMsg; } catch {}
+        toast({ title: 'Upload failed', description: errorMsg, variant: 'destructive' });
+        setUploading(null);
+        return;
+      }
       const data = await res.json();
       if (data.error) {
         toast({ title: 'Upload failed', description: data.error, variant: 'destructive' });
@@ -69,8 +77,8 @@ export default function BrandsPage() {
         toast({ title: 'Uploaded', description: `${file.name} processed successfully.` });
         loadDocuments();
       }
-    } catch {
-      toast({ title: 'Error', description: 'Failed to upload document.', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to upload document.', variant: 'destructive' });
     }
     setUploading(null);
   }
