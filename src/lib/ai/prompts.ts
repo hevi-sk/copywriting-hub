@@ -11,43 +11,50 @@ export function getBlogGenerationPrompt(params: {
   customPrompt?: string;
   imageCount: number;
 }) {
-  const htmlRules = `
-CRITICAL OUTPUT FORMAT RULES (ALWAYS follow these):
+  const formatReminder = `
+OUTPUT FORMAT REMINDER:
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
-- NEVER use markdown syntax. Use <strong> instead of **bold**, use <em> instead of *italic*. No asterisks for formatting ever.
-- Use any valid HTML tags including table, div, iframe, and inline styles when specified in the instructions.
+- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
+- If your instructions above specify HTML templates (tables, styled divs, iframes), reproduce them EXACTLY with the specified inline styles.
+- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
+- STRICTLY follow the word count from your instructions. Do not exceed it.`;
+
+  if (params.customPrompt) {
+    return {
+      system: params.customPrompt,
+
+      user: `Brand: ${params.brandName}
+Brand context: ${params.brandContext}
+
+${params.templateHtml ? `HTML template structure to follow:\n<template>\n${params.templateHtml}\n</template>\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
+Target keywords (use naturally throughout): ${params.keywords.join(', ')}
+Language: ${LANGUAGE_NAMES[params.language]}
+
+${formatReminder}
+
+Write the complete blog post now as clean HTML.`
+    };
+  }
+
+  return {
+    system: `You are an expert SEO content writer for ${params.brandName}. You write engaging, well-researched blog posts that rank well in search engines while providing genuine value to readers.
+
+Brand context: ${params.brandContext}
+
+Rules:
+- Output ONLY clean HTML. No markdown, no code fences, no explanations.
+- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
+- Use semantic HTML tags: h1, h2, h3, p, ul, li, strong, em
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Place image placeholders at logical positions between sections
 - Write naturally, weaving keywords in organically — never keyword-stuff
-- Write in ${LANGUAGE_NAMES[params.language]}
-- If the instructions specify HTML templates for tables, tips, or embeds, reproduce them EXACTLY with the specified inline styles.`;
+- Target word count: 1200-2000 words
+- Write in ${LANGUAGE_NAMES[params.language]}`,
 
-  const systemPrompt = params.customPrompt
-    ? `${params.customPrompt}
+    user: `${params.templateHtml ? `HTML template structure:\n<template>\n${params.templateHtml}\n</template>\n\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
+Target keywords: ${params.keywords.join(', ')}
 
-Brand: ${params.brandName}
-Brand context: ${params.brandContext}
-${htmlRules}`
-    : `You are an expert SEO content writer for ${params.brandName}. You write engaging, well-researched blog posts that rank well in search engines while providing genuine value to readers.
-
-Brand context: ${params.brandContext}
-${htmlRules}
-- Target word count: 1200-2000 words`;
-
-  return {
-    system: systemPrompt,
-
-    user: `Generate a blog post following this HTML template structure:
-
-<template>
-${params.templateHtml}
-</template>
-
-${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
-Topic: ${params.topic}
-Target keywords (use naturally throughout): ${params.keywords.join(', ')}
-
-IMPORTANT: Strictly follow the word count specified in the system instructions. Do not exceed it. Write the complete blog post now as clean HTML.`
+Write the complete blog post now as clean HTML.`
   };
 }
 
@@ -62,49 +69,52 @@ export function getPresellGenerationPrompt(params: {
   customPrompt?: string;
   imageCount: number;
 }) {
-  const htmlRules = `
-CRITICAL OUTPUT FORMAT RULES (ALWAYS follow these):
+  const formatReminder = `
+OUTPUT FORMAT REMINDER:
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
-- NEVER use markdown syntax. Use <strong> instead of **bold**, use <em> instead of *italic*. No asterisks for formatting ever.
-- Use any valid HTML tags including table, div, iframe, and inline styles when specified in the instructions.
+- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
+- If your instructions above specify HTML templates (tables, styled divs, iframes), reproduce them EXACTLY with the specified inline styles.
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
-- Write naturally, weaving keywords in organically — never keyword-stuff
-- Write in ${LANGUAGE_NAMES[params.language]}
-- If the instructions specify HTML templates for tables, tips, or embeds, reproduce them EXACTLY with the specified inline styles.`;
+- STRICTLY follow the word count from your instructions. Do not exceed it.`;
 
-  const defaultPresellInstructions = `You are an expert conversion copywriter for ${params.brandName}. You write persuasive advertorial/presell pages that convert readers into customers while feeling authentic and trustworthy.
+  if (params.customPrompt) {
+    return {
+      system: params.customPrompt,
+
+      user: `Brand: ${params.brandName}
+Brand context: ${params.brandContext}
+
+${params.templateHtml ? `HTML template structure to follow:\n<template>\n${params.templateHtml}\n</template>\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
+Target keywords: ${params.keywords.join(', ')}
+Language: ${LANGUAGE_NAMES[params.language]}
+
+${formatReminder}
+
+Write the complete presell page now as clean HTML.`
+    };
+  }
+
+  return {
+    system: `You are an expert conversion copywriter for ${params.brandName}. You write persuasive advertorial/presell pages that convert readers into customers while feeling authentic and trustworthy.
 
 Brand context: ${params.brandContext}
-${htmlRules}
+
+Rules:
+- Output ONLY clean HTML. No markdown, no code fences, no explanations.
+- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
 - Use a listicle format with numbered reasons (like "7 reasons why...")
 - Structure: Hook headline → numbered reasons with emotional hooks → product showcase → urgency/scarcity → CTA
 - Write as if from a real person sharing their genuine experience (first person)
 - Include social proof elements (statistics, testimonial-style content)
+- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Make it persuasive but authentic — not overly salesy
-- Target word count: 800-1500 words`;
+- Target word count: 800-1500 words
+- Write in ${LANGUAGE_NAMES[params.language]}`,
 
-  const systemPrompt = params.customPrompt
-    ? `${params.customPrompt}
-
-Brand: ${params.brandName}
-Brand context: ${params.brandContext}
-${htmlRules}`
-    : defaultPresellInstructions;
-
-  return {
-    system: systemPrompt,
-
-    user: `Generate a presell/advertorial page following this HTML template structure:
-
-<template>
-${params.templateHtml}
-</template>
-
-${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
-Topic: ${params.topic}
+    user: `${params.templateHtml ? `HTML template structure:\n<template>\n${params.templateHtml}\n</template>\n\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
 Target keywords: ${params.keywords.join(', ')}
 
-IMPORTANT: Strictly follow the word count specified in the system instructions. Do not exceed it. Write the complete presell page now as clean HTML.`
+Write the complete presell page now as clean HTML.`
   };
 }
 
