@@ -4,6 +4,8 @@ import { generateContent } from '@/lib/ai/openai';
 import { getTranslationPrompt } from '@/lib/ai/prompts';
 import type { TranslateRequest } from '@/types';
 
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();

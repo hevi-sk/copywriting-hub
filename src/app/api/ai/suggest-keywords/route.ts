@@ -4,6 +4,8 @@ import { generateContent } from '@/lib/ai/openai';
 import { getKeywordSuggestionsPrompt } from '@/lib/ai/prompts';
 import type { LanguageCode } from '@/types';
 
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();

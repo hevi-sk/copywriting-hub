@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { GoogleGenAI } from '@google/genai';
 
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();

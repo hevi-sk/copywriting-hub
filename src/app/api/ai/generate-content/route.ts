@@ -7,6 +7,8 @@ import {
 } from '@/lib/ai/prompts';
 import type { GenerateContentRequest } from '@/types';
 
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
@@ -122,10 +124,11 @@ export async function POST(request: NextRequest) {
         'Transfer-Encoding': 'chunked',
       },
     });
-  } catch (error) {
-    console.error('Generate content error:', error);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Generate content error:', msg, error);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate content' }),
+      JSON.stringify({ error: `Failed to generate content: ${msg}` }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

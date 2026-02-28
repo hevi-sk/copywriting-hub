@@ -108,7 +108,9 @@ export default function NewBlogPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Generation failed');
+        const errBody = await res.text();
+        console.error('Generation API error:', res.status, errBody);
+        throw new Error(errBody || `Generation failed (${res.status})`);
       }
 
       const reader = res.body?.getReader();
@@ -190,10 +192,12 @@ export default function NewBlogPage() {
 
       // Auto-generate SEO metadata
       generateSeo(accumulated);
-    } catch (error) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Content generation error:', msg);
       toast({
         title: 'Generation failed',
-        description: 'An error occurred during content generation.',
+        description: msg.length > 200 ? msg.slice(0, 200) + '…' : msg,
         variant: 'destructive',
       });
       setStep('setup');
