@@ -13,7 +13,7 @@ type PresetType = 'prompt_template' | 'image_style';
 
 export function usePresetTemplates(presetType: PresetType, defaults: PresetTemplate[]) {
   const supabase = createClient();
-  const [items, setItems] = useState<PresetTemplate[]>(defaults);
+  const [items, setItems] = useState<PresetTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 

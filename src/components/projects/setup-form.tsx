@@ -329,7 +329,7 @@ export function SetupForm({ type, onGenerate, loading }: SetupFormProps) {
               }}
               className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">No template</option>
+              <option value="">{promptTemplates.loading ? 'Loading...' : 'No template'}</option>
               {promptTemplates.items.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
