@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const stream = await client.chat.completions.create({
       model: 'gpt-5.2',
-      max_tokens: 16000,
+      max_completion_tokens: 16000,
       stream: true,
       messages: [
         { role: 'system', content: prompt.system },
