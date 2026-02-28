@@ -46,7 +46,7 @@ ${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
 Topic: ${params.topic}
 Target keywords (use naturally throughout): ${params.keywords.join(', ')}
 
-Write the complete blog post now as clean HTML.`
+IMPORTANT: Strictly follow the word count specified in the system instructions. Do not exceed it. Write the complete blog post now as clean HTML.`
   };
 }
 
@@ -101,7 +101,7 @@ ${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
 Topic: ${params.topic}
 Target keywords: ${params.keywords.join(', ')}
 
-Write the complete presell page now as clean HTML.`
+IMPORTANT: Strictly follow the word count specified in the system instructions. Do not exceed it. Write the complete presell page now as clean HTML.`
   };
 }
 
