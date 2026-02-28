@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
     const client = createOpenAIClient(apiKey);
 
     const stream = await client.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 8000,
+      model: 'gpt-4o-latest',
+      max_tokens: 16000,
       stream: true,
       messages: [
         { role: 'system', content: prompt.system },

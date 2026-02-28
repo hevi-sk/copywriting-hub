@@ -14,8 +14,8 @@ export async function generateContent(params: {
   const client = createOpenAIClient(params.apiKey);
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
-    max_tokens: 8000,
+    model: 'gpt-4o-latest',
+    max_tokens: 16000,
     messages: [
       { role: 'system', content: params.system },
       { role: 'user', content: params.user },
@@ -33,8 +33,8 @@ export async function* streamContent(params: {
   const client = createOpenAIClient(params.apiKey);
 
   const stream = await client.chat.completions.create({
-    model: 'gpt-4o',
-    max_tokens: 8000,
+    model: 'gpt-4o-latest',
+    max_tokens: 16000,
     stream: true,
     messages: [
       { role: 'system', content: params.system },
