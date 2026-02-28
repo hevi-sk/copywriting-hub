@@ -15,11 +15,12 @@ export function getBlogGenerationPrompt(params: {
 CRITICAL OUTPUT FORMAT RULES (ALWAYS follow these):
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
 - NEVER use markdown syntax. Use <strong> instead of **bold**, use <em> instead of *italic*. No asterisks for formatting ever.
-- Use semantic HTML tags: h1, h2, h3, p, ul, li, strong, em
+- Use any valid HTML tags including table, div, iframe, and inline styles when specified in the instructions.
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Place image placeholders at logical positions between sections
 - Write naturally, weaving keywords in organically — never keyword-stuff
-- Write in ${LANGUAGE_NAMES[params.language]}`;
+- Write in ${LANGUAGE_NAMES[params.language]}
+- If the instructions specify HTML templates for tables, tips, or embeds, reproduce them EXACTLY with the specified inline styles.`;
 
   const systemPrompt = params.customPrompt
     ? `${params.customPrompt}
@@ -65,9 +66,11 @@ export function getPresellGenerationPrompt(params: {
 CRITICAL OUTPUT FORMAT RULES (ALWAYS follow these):
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
 - NEVER use markdown syntax. Use <strong> instead of **bold**, use <em> instead of *italic*. No asterisks for formatting ever.
+- Use any valid HTML tags including table, div, iframe, and inline styles when specified in the instructions.
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Write naturally, weaving keywords in organically — never keyword-stuff
-- Write in ${LANGUAGE_NAMES[params.language]}`;
+- Write in ${LANGUAGE_NAMES[params.language]}
+- If the instructions specify HTML templates for tables, tips, or embeds, reproduce them EXACTLY with the specified inline styles.`;
 
   const defaultPresellInstructions = `You are an expert conversion copywriter for ${params.brandName}. You write persuasive advertorial/presell pages that convert readers into customers while feeling authentic and trustworthy.
 
