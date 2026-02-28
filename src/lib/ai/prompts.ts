@@ -11,19 +11,29 @@ export function getBlogGenerationPrompt(params: {
   customPrompt?: string;
   imageCount: number;
 }) {
-  return {
-    system: `You are an expert SEO content writer for ${params.brandName}. You write engaging, well-researched blog posts that rank well in search engines while providing genuine value to readers.
-
-Brand context: ${params.brandContext}
-
-Rules:
+  const htmlRules = `
+Technical HTML rules (ALWAYS follow these):
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
 - Use semantic HTML tags: h1, h2, h3, p, ul, li, strong, em
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Place image placeholders at logical positions between sections
 - Write naturally, weaving keywords in organically — never keyword-stuff
-- Target word count: 1200-2000 words
-- Write in ${LANGUAGE_NAMES[params.language]}`,
+- Write in ${LANGUAGE_NAMES[params.language]}`;
+
+  const systemPrompt = params.customPrompt
+    ? `${params.customPrompt}
+
+Brand: ${params.brandName}
+Brand context: ${params.brandContext}
+${htmlRules}`
+    : `You are an expert SEO content writer for ${params.brandName}. You write engaging, well-researched blog posts that rank well in search engines while providing genuine value to readers.
+
+Brand context: ${params.brandContext}
+${htmlRules}
+- Target word count: 1200-2000 words`;
+
+  return {
+    system: systemPrompt,
 
     user: `Generate a blog post following this HTML template structure:
 
@@ -34,7 +44,6 @@ ${params.templateHtml}
 ${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
 Topic: ${params.topic}
 Target keywords (use naturally throughout): ${params.keywords.join(', ')}
-${params.customPrompt ? `\nAdditional instructions: ${params.customPrompt}` : ''}
 
 Write the complete blog post now as clean HTML.`
   };
@@ -51,21 +60,34 @@ export function getPresellGenerationPrompt(params: {
   customPrompt?: string;
   imageCount: number;
 }) {
-  return {
-    system: `You are an expert conversion copywriter for ${params.brandName}. You write persuasive advertorial/presell pages that convert readers into customers while feeling authentic and trustworthy.
+  const htmlRules = `
+Technical HTML rules (ALWAYS follow these):
+- Output ONLY clean HTML. No markdown, no code fences, no explanations.
+- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
+- Write naturally, weaving keywords in organically — never keyword-stuff
+- Write in ${LANGUAGE_NAMES[params.language]}`;
+
+  const defaultPresellInstructions = `You are an expert conversion copywriter for ${params.brandName}. You write persuasive advertorial/presell pages that convert readers into customers while feeling authentic and trustworthy.
 
 Brand context: ${params.brandContext}
-
-Rules:
-- Output ONLY clean HTML. No markdown, no code fences, no explanations.
+${htmlRules}
 - Use a listicle format with numbered reasons (like "7 reasons why...")
 - Structure: Hook headline → numbered reasons with emotional hooks → product showcase → urgency/scarcity → CTA
 - Write as if from a real person sharing their genuine experience (first person)
 - Include social proof elements (statistics, testimonial-style content)
-- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Make it persuasive but authentic — not overly salesy
-- Target word count: 800-1500 words
-- Write in ${LANGUAGE_NAMES[params.language]}`,
+- Target word count: 800-1500 words`;
+
+  const systemPrompt = params.customPrompt
+    ? `${params.customPrompt}
+
+Brand: ${params.brandName}
+Brand context: ${params.brandContext}
+${htmlRules}`
+    : defaultPresellInstructions;
+
+  return {
+    system: systemPrompt,
 
     user: `Generate a presell/advertorial page following this HTML template structure:
 
@@ -76,7 +98,6 @@ ${params.templateHtml}
 ${params.title ? `Title (use as the H1 heading): ${params.title}` : ''}
 Topic: ${params.topic}
 Target keywords: ${params.keywords.join(', ')}
-${params.customPrompt ? `\nAdditional instructions: ${params.customPrompt}` : ''}
 
 Write the complete presell page now as clean HTML.`
   };
