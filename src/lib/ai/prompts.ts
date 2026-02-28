@@ -12,8 +12,9 @@ export function getBlogGenerationPrompt(params: {
   imageCount: number;
 }) {
   const htmlRules = `
-Technical HTML rules (ALWAYS follow these):
+CRITICAL OUTPUT FORMAT RULES (ALWAYS follow these):
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
+- NEVER use markdown syntax. Use <strong> instead of **bold**, use <em> instead of *italic*. No asterisks for formatting ever.
 - Use semantic HTML tags: h1, h2, h3, p, ul, li, strong, em
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Place image placeholders at logical positions between sections
@@ -61,8 +62,9 @@ export function getPresellGenerationPrompt(params: {
   imageCount: number;
 }) {
   const htmlRules = `
-Technical HTML rules (ALWAYS follow these):
+CRITICAL OUTPUT FORMAT RULES (ALWAYS follow these):
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
+- NEVER use markdown syntax. Use <strong> instead of **bold**, use <em> instead of *italic*. No asterisks for formatting ever.
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Write naturally, weaving keywords in organically — never keyword-stuff
 - Write in ${LANGUAGE_NAMES[params.language]}`;

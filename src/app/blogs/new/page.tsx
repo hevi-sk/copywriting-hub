@@ -124,6 +124,14 @@ export default function NewBlogPage() {
         }
       }
 
+      // Clean up any markdown artifacts from the AI output
+      accumulated = accumulated
+        .replace(/```html\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      setContent(accumulated);
+
       // Save generated content
       await supabase
         .from('projects')
