@@ -1,5 +1,44 @@
 import { LanguageCode, LANGUAGE_NAMES } from '@/types';
 
+const HTML_RULES = `
+---
+HTML OUTPUT RULES (non-negotiable):
+- Output ONLY clean HTML. No markdown, no code fences, no explanations.
+- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
+- Use ONLY these HTML elements: h1, h2, h3, h4, p, ul, ol, li, strong, em, a, blockquote, hr, img.
+- Do NOT use div, table, span, iframe, or inline style attributes — they will be stripped by the editor.
+- For tips/info boxes, use <blockquote>. For data comparisons, use <ul> or <ol>.`;
+
+function getImageRule(count: number) {
+  return `- Include exactly ${count} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />`;
+}
+
+function buildUserMessage(params: {
+  title?: string;
+  brandName: string;
+  brandContext: string;
+  templateHtml: string;
+  topic: string;
+  keywords: string[];
+  language: LanguageCode;
+  contentType: 'blog post' | 'presell page';
+}) {
+  const parts: string[] = [];
+
+  if (params.title) parts.push(`Title: ${params.title}`);
+  parts.push(`Topic: ${params.topic}`);
+  parts.push(`Keywords: ${params.keywords.join(', ')}`);
+  parts.push(`Language: ${LANGUAGE_NAMES[params.language]}`);
+  parts.push(`Brand: ${params.brandName}`);
+  if (params.brandContext) parts.push(`Brand context: ${params.brandContext}`);
+  if (params.templateHtml) {
+    parts.push(`\nHTML template structure:\n<template>\n${params.templateHtml}\n</template>`);
+  }
+  parts.push(`\nWrite the complete ${params.contentType} now as clean HTML.`);
+
+  return parts.join('\n');
+}
+
 export function getBlogGenerationPrompt(params: {
   title?: string;
   brandName: string;
@@ -11,51 +50,30 @@ export function getBlogGenerationPrompt(params: {
   customPrompt?: string;
   imageCount: number;
 }) {
-  const formatReminder = `
-OUTPUT FORMAT REMINDER:
-- Output ONLY clean HTML. No markdown, no code fences, no explanations.
-- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
-- Use ONLY these HTML elements: h1, h2, h3, h4, p, ul, ol, li, strong, em, a, blockquote, hr, img. Do NOT use div, table, tr, td, th, span, iframe, or inline style attributes — they will be stripped by the editor.
-- For tips/info boxes, use <blockquote> instead of styled <div>. For data comparisons, use a <ul> or <ol> list instead of <table>.
-- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
-- STRICTLY follow the word count from your instructions. Do not exceed it.`;
+  const imageRule = getImageRule(params.imageCount);
 
   if (params.customPrompt) {
     return {
-      system: params.customPrompt,
+      system: `${params.customPrompt}
+${HTML_RULES}
+${imageRule}`,
 
-      user: `Brand: ${params.brandName}
-Brand context: ${params.brandContext}
-
-${params.templateHtml ? `HTML template structure to follow:\n<template>\n${params.templateHtml}\n</template>\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
-Target keywords (use naturally throughout): ${params.keywords.join(', ')}
-Language: ${LANGUAGE_NAMES[params.language]}
-
-${formatReminder}
-
-Write the complete blog post now as clean HTML.`
+      user: buildUserMessage({ ...params, contentType: 'blog post' }),
     };
   }
 
   return {
     system: `You are an expert SEO content writer for ${params.brandName}. You write engaging, well-researched blog posts that rank well in search engines while providing genuine value to readers.
 
-Brand context: ${params.brandContext}
-
 Rules:
-- Output ONLY clean HTML. No markdown, no code fences, no explanations.
-- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
-- Use semantic HTML tags: h1, h2, h3, p, ul, li, strong, em
-- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
-- Place image placeholders at logical positions between sections
 - Write naturally, weaving keywords in organically — never keyword-stuff
+- Place image placeholders at logical positions between sections
 - Target word count: 1200-2000 words
-- Write in ${LANGUAGE_NAMES[params.language]}`,
+- Write in ${LANGUAGE_NAMES[params.language]}
+${HTML_RULES}
+${imageRule}`,
 
-    user: `${params.templateHtml ? `HTML template structure:\n<template>\n${params.templateHtml}\n</template>\n\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
-Target keywords: ${params.keywords.join(', ')}
-
-Write the complete blog post now as clean HTML.`
+    user: buildUserMessage({ ...params, contentType: 'blog post' }),
   };
 }
 
@@ -70,53 +88,33 @@ export function getPresellGenerationPrompt(params: {
   customPrompt?: string;
   imageCount: number;
 }) {
-  const formatReminder = `
-OUTPUT FORMAT REMINDER:
-- Output ONLY clean HTML. No markdown, no code fences, no explanations.
-- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
-- Use ONLY these HTML elements: h1, h2, h3, h4, p, ul, ol, li, strong, em, a, blockquote, hr, img. Do NOT use div, table, tr, td, th, span, iframe, or inline style attributes — they will be stripped by the editor.
-- For tips/info boxes, use <blockquote> instead of styled <div>. For data comparisons, use a <ul> or <ol> list instead of <table>.
-- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
-- STRICTLY follow the word count from your instructions. Do not exceed it.`;
+  const imageRule = getImageRule(params.imageCount);
 
   if (params.customPrompt) {
     return {
-      system: params.customPrompt,
+      system: `${params.customPrompt}
+${HTML_RULES}
+${imageRule}`,
 
-      user: `Brand: ${params.brandName}
-Brand context: ${params.brandContext}
-
-${params.templateHtml ? `HTML template structure to follow:\n<template>\n${params.templateHtml}\n</template>\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
-Target keywords: ${params.keywords.join(', ')}
-Language: ${LANGUAGE_NAMES[params.language]}
-
-${formatReminder}
-
-Write the complete presell page now as clean HTML.`
+      user: buildUserMessage({ ...params, contentType: 'presell page' }),
     };
   }
 
   return {
     system: `You are an expert conversion copywriter for ${params.brandName}. You write persuasive advertorial/presell pages that convert readers into customers while feeling authentic and trustworthy.
 
-Brand context: ${params.brandContext}
-
 Rules:
-- Output ONLY clean HTML. No markdown, no code fences, no explanations.
-- NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
 - Use a listicle format with numbered reasons (like "7 reasons why...")
 - Structure: Hook headline → numbered reasons with emotional hooks → product showcase → urgency/scarcity → CTA
 - Write as if from a real person sharing their genuine experience (first person)
 - Include social proof elements (statistics, testimonial-style content)
-- Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - Make it persuasive but authentic — not overly salesy
 - Target word count: 800-1500 words
-- Write in ${LANGUAGE_NAMES[params.language]}`,
+- Write in ${LANGUAGE_NAMES[params.language]}
+${HTML_RULES}
+${imageRule}`,
 
-    user: `${params.templateHtml ? `HTML template structure:\n<template>\n${params.templateHtml}\n</template>\n\n` : ''}${params.title ? `Title (use as H1): ${params.title}\n` : ''}Topic: ${params.topic}
-Target keywords: ${params.keywords.join(', ')}
-
-Write the complete presell page now as clean HTML.`
+    user: buildUserMessage({ ...params, contentType: 'presell page' }),
   };
 }
 

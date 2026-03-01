@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Cap brand context to avoid excessive prompt size
-    const MAX_BRAND_CONTEXT_CHARS = 15000;
+    // Cap brand context to keep prompts focused
+    const MAX_BRAND_CONTEXT_CHARS = 5000;
     if (brandContext.length > MAX_BRAND_CONTEXT_CHARS) {
-      brandContext = brandContext.slice(0, MAX_BRAND_CONTEXT_CHARS) + '\n\n[Brand context truncated due to length]';
+      brandContext = brandContext.slice(0, MAX_BRAND_CONTEXT_CHARS) + '\n[truncated]';
     }
 
     if (!apiKey) {
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       title: body.title,
       brandName: body.brand_name || 'the brand',
       brandContext,
-      templateHtml: body.template_html || '<article><h1>Title</h1><p>Content here</p></article>',
+      templateHtml: body.template_html || '',
       topic: body.topic,
       keywords: body.keywords,
       language: body.language,
