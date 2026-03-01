@@ -89,6 +89,10 @@ export async function POST(request: NextRequest) {
         ? getPresellGenerationPrompt(promptParams)
         : getBlogGenerationPrompt(promptParams);
 
+    console.log('[generate-content] System prompt length:', prompt.system.length);
+    console.log('[generate-content] User prompt length:', prompt.user.length);
+    console.log('[generate-content] System prompt first 100:', prompt.system.slice(0, 100));
+
     const client = createOpenAIClient(apiKey);
 
     const stream = await client.chat.completions.create({
@@ -101,6 +105,7 @@ export async function POST(request: NextRequest) {
       ],
     });
 
+    let totalChunks = 0;
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
@@ -108,11 +113,21 @@ export async function POST(request: NextRequest) {
           for await (const chunk of stream) {
             const text = chunk.choices[0]?.delta?.content;
             if (text) {
+              totalChunks++;
               controller.enqueue(encoder.encode(text));
             }
+            // Log finish reason
+            const finishReason = chunk.choices[0]?.finish_reason;
+            if (finishReason) {
+              console.log('[generate-content] Finish reason:', finishReason, '| Total chunks:', totalChunks);
+            }
+          }
+          if (totalChunks === 0) {
+            console.error('[generate-content] WARNING: Stream returned 0 content chunks');
           }
           controller.close();
         } catch (error) {
+          console.error('[generate-content] Stream error:', error);
           controller.error(error);
         }
       },

@@ -15,7 +15,8 @@ export function getBlogGenerationPrompt(params: {
 OUTPUT FORMAT REMINDER:
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
 - NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
-- If your instructions above specify HTML templates (tables, styled divs, iframes), reproduce them EXACTLY with the specified inline styles.
+- Use ONLY these HTML elements: h1, h2, h3, h4, p, ul, ol, li, strong, em, a, blockquote, hr, img. Do NOT use div, table, tr, td, th, span, iframe, or inline style attributes — they will be stripped by the editor.
+- For tips/info boxes, use <blockquote> instead of styled <div>. For data comparisons, use a <ul> or <ol> list instead of <table>.
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - STRICTLY follow the word count from your instructions. Do not exceed it.`;
 
@@ -73,7 +74,8 @@ export function getPresellGenerationPrompt(params: {
 OUTPUT FORMAT REMINDER:
 - Output ONLY clean HTML. No markdown, no code fences, no explanations.
 - NEVER use **asterisks** for bold — use <strong> tags. NEVER use *asterisks* for italic — use <em> tags.
-- If your instructions above specify HTML templates (tables, styled divs, iframes), reproduce them EXACTLY with the specified inline styles.
+- Use ONLY these HTML elements: h1, h2, h3, h4, p, ul, ol, li, strong, em, a, blockquote, hr, img. Do NOT use div, table, tr, td, th, span, iframe, or inline style attributes — they will be stripped by the editor.
+- For tips/info boxes, use <blockquote> instead of styled <div>. For data comparisons, use a <ul> or <ol> list instead of <table>.
 - Include exactly ${params.imageCount} image placeholders as: <img data-ai-generate="true" data-section="description of what image should show" alt="descriptive alt text" />
 - STRICTLY follow the word count from your instructions. Do not exceed it.`;
 

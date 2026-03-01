@@ -122,6 +122,13 @@ export default function NewPresellPage() {
         }
       }
 
+      console.log('[generate] Streamed content length:', accumulated.length);
+      console.log('[generate] First 200 chars:', accumulated.slice(0, 200));
+
+      if (!accumulated.trim()) {
+        throw new Error('AI returned empty content. Please try again.');
+      }
+
       // Clean up any markdown artifacts from the AI output
       accumulated = accumulated
         .replace(/```html\s*/g, '')
